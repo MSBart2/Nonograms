@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nonograms - Picture Crossword Puzzles</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="screen active">
+            <div class="container">
+                <div class="card login-card">
+                    <h1>🎨 Nonograms</h1>
+                    <p class="subtitle">Picture Crossword Puzzles</p>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="button" id="registerBtn" class="btn btn-secondary">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="mainScreen" class="screen">
+            <nav class="navbar">
+                <div class="nav-brand">🎨 Nonograms</div>
+                <div class="nav-menu">
+                    <span id="userDisplay" class="nav-user"></span>
+                    <button id="logoutBtn" class="btn btn-text">Logout</button>
+                </div>
+            </nav>
+
+            <div class="container">
+                <div class="main-grid">
+                    <!-- Sidebar -->
+                    <aside class="sidebar">
+                        <div class="menu">
+                            <button class="menu-item active" data-view="browse">
+                                <span class="icon">📋</span>
+                                <span>Browse Puzzles</span>
+                            </button>
+                            <button class="menu-item" data-view="create">
+                                <span class="icon">✏️</span>
+                                <span>Create Puzzle</span>
+                            </button>
+                            <button class="menu-item" data-view="fromPhoto">
+                                <span class="icon">📷</span>
+                                <span>From Photo</span>
+                            </button>
+                            <button class="menu-item" data-view="solve">
+                                <span class="icon">🔍</span>
+                                <span>Solve Puzzle</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content Area -->
+                    <main class="content">
+                        <!-- Browse Puzzles View -->
+                        <div id="browseView" class="view active">
+                            <h2>Browse Puzzles</h2>
+                            <div class="filter-bar">
+                                <label for="sizeFilter">Filter by size:</label>
+                                <select id="sizeFilter">
+                                    <option value="all">All Sizes</option>
+                                    <option value="5">5x5</option>
+                                    <option value="10">10x10</option>
+                                    <option value="15">15x15</option>
+                                    <option value="20">20x20</option>
+                                </select>
+                            </div>
+                            <div id="puzzleList" class="puzzle-grid">
+                                <!-- Puzzles will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Create Puzzle View -->
+                        <div id="createView" class="view">
+                            <h2>Create New Puzzle</h2>
+                            <div class="card">
+                                <form id="createPuzzleForm">
+                                    <div class="form-group">
+                                        <label for="puzzleName">Puzzle Name</label>
+                                        <input type="text" id="puzzleName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="puzzleSize">Size</label>
+                                        <select id="puzzleSize">
+                                            <option value="5">5x5</option>
+                                            <option value="10" selected>10x10</option>
+                                            <option value="15">15x15</option>
+                                            <option value="20">20x20</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Create Grid</button>
+                                </form>
+                            </div>
+                            <div id="gridEditor" class="hidden">
+                                <h3>Design Your Puzzle</h3>
+                                <p class="help-text">Click cells to toggle them on/off</p>
+                                <div id="editorCanvas"></div>
+                                <div class="editor-actions">
+                                    <button id="clearGrid" class="btn btn-secondary">Clear</button>
+                                    <button id="savePuzzle" class="btn btn-primary">Save Puzzle</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- From Photo View -->
+                        <div id="fromPhotoView" class="view">
+                            <h2>Create Puzzle from Photo</h2>
+                            <div class="card">
+                                <form id="photoUploadForm">
+                                    <div class="form-group">
+                                        <label for="photoPuzzleName">Puzzle Name</label>
+                                        <input type="text" id="photoPuzzleName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="photoPuzzleSize">Size</label>
+                                        <select id="photoPuzzleSize">
+                                            <option value="5">5x5</option>
+                                            <option value="10" selected>10x10</option>
+                                            <option value="15">15x15</option>
+                                            <option value="20">20x20</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="photoUpload">Upload Photo</label>
+                                        <input type="file" id="photoUpload" accept="image/*" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Generate Puzzle</button>
+                                </form>
+                                <div id="photoPreview" class="photo-preview hidden">
+                                    <h3>Preview</h3>
+                                    <canvas id="photoCanvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Solve Puzzle View -->
+                        <div id="solveView" class="view">
+                            <h2>Solve Puzzle from Image</h2>
+                            <div class="card">
+                                <div class="upload-options">
+                                    <div class="form-group">
+                                        <label for="puzzleScreenshot">Upload Screenshot</label>
+                                        <input type="file" id="puzzleScreenshot" accept="image/*">
+                                    </div>
+                                    <div class="divider">OR</div>
+                                    <button id="openCamera" class="btn btn-primary">
+                                        <span class="icon">📸</span>
+                                        Open Camera
+                                    </button>
+                                </div>
+                                <video id="cameraPreview" class="camera-preview hidden" autoplay playsinline></video>
+                                <button id="capturePhoto" class="btn btn-primary hidden">Capture</button>
+                                <canvas id="captureCanvas" class="hidden"></canvas>
+                            </div>
+                            <div id="solveResult" class="solve-result hidden">
+                                <h3>Solution</h3>
+                                <div id="solutionDisplay"></div>
+                            </div>
+                        </div>
+
+                        <!-- Play Puzzle View -->
+                        <div id="playView" class="view">
+                            <div class="puzzle-header">
+                                <button id="backToBrowse" class="btn btn-secondary">← Back</button>
+                                <h2 id="currentPuzzleName"></h2>
+                            </div>
+                            <div id="gameCanvas"></div>
+                            <div class="game-controls">
+                                <button id="checkSolution" class="btn btn-primary">Check Solution</button>
+                                <button id="resetPuzzle" class="btn btn-secondary">Reset</button>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/nonogram.js"></script>
+    <script src="js/solver.js"></script>
+    <script src="js/photoProcessor.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
