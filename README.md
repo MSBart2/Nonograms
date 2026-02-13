@@ -1,161 +1,123 @@
-# Nonograms - Picture Crossword Puzzles
+# Nonograms
 
-A modern, beautiful web application for creating, sharing, and solving Nonogram puzzles (also known as picture crossword puzzles, griddlers, or paint by numbers).
+A client-side web application for creating, browsing, and playing Nonogram puzzles (also known as Picross, Griddlers, or Paint by Numbers). No server or build step required — open `index.html` in a browser and start playing.
 
-## Features
+## Prerequisites
 
-### 🎨 Create Puzzles
-- **Manual Creation**: Design puzzles by specifying size (5x5, 10x10, 15x15, 20x20) and clicking cells to create patterns
-- **Photo Upload**: Generate puzzles automatically from uploaded images
-- **Intuitive Editor**: Easy-to-use grid editor with clear/save functionality
+- A modern web browser (Chrome, Edge, Firefox, Safari, or Opera)
+- Optional: any static file server (Python, Node.js, etc.) if you prefer serving over `http://`
 
-### 📋 Browse & Play
-- **Puzzle Library**: View all created puzzles in a beautiful grid layout
-- **Filter by Size**: Quickly find puzzles by their dimensions
-- **Interactive Gameplay**: Click to mark cells, right-click (or Shift+click) to mark cells as empty
-- **Solution Checking**: Verify your solution at any time
-- **Reset Option**: Start over if needed
-
-### 🔍 Solve Existing Puzzles
-- **Screenshot Upload**: Upload a screenshot of an existing puzzle to solve it
-- **Camera Integration**: Use your device's camera to capture puzzles in real-time
-- **Auto-Detection**: Automatically processes and solves uploaded puzzles
-
-### 🔐 User Authentication
-- **Local Authentication**: Simple username/password system using browser storage
-- **User Registration**: Create an account to start creating and saving puzzles
-- **Session Management**: Stay logged in across page refreshes
-
-## Technology Stack
-
-- **Frontend**: Pure HTML5, CSS3, and Vanilla JavaScript
-- **Storage**: LocalStorage for user data and puzzles
-- **Design**: Modern, responsive UI with smooth animations
-- **Static**: No backend required - fully client-side application
+> **Note:** Camera capture in the "Solve Puzzle" view requires an HTTPS origin or `localhost`.
 
 ## Getting Started
 
-### Installation
+### Clone
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/MSBart2/Nonograms.git
 cd Nonograms
 ```
 
-2. Open the application:
-   - Simply open `index.html` in a modern web browser
-   - Or use a local server:
-   ```bash
-   # Using Python
-   python -m http.server 8000
-   
-   # Using Node.js
-   npx http-server
-   ```
+### Run
 
-3. Access the application:
-   - Open your browser to `http://localhost:8000` (if using a server)
-   - Or directly open `index.html`
+Open `index.html` directly in your browser, or start a local server:
 
-### First Time Use
+```bash
+# Python
+python -m http.server 8000
 
-1. **Register an Account**:
-   - Enter a username (minimum 3 characters)
-   - Enter a password (minimum 6 characters)
-   - Click "Register"
+# Node.js
+npx http-server
+```
 
-2. **Create Your First Puzzle**:
-   - Click "Create Puzzle" in the sidebar
-   - Enter a puzzle name and select size
-   - Click "Create Grid" and start designing
-   - Click cells to toggle them on/off
-   - Click "Save Puzzle" when done
+Then visit `http://localhost:8000`.
 
-3. **Play Puzzles**:
-   - Click "Browse Puzzles" to see all available puzzles
-   - Click any puzzle card to start playing
-   - Left-click cells to mark them as filled
-   - Right-click (or Shift+click) to mark them as empty
-   - Click "Check Solution" to verify your answer
+### First-Time Setup
 
-## How to Play Nonograms
+1. **Register** — enter a username (≥ 3 chars) and password (≥ 6 chars), then click "Register".
+2. **Create a puzzle** — go to *Create Puzzle*, pick a name and grid size (5×5, 10×10, 15×15, or 20×20), click cells to toggle them, and save.
+3. **Play** — go to *Browse Puzzles*, click a card, and solve it.
 
-Nonograms are logic puzzles where you fill in cells in a grid to reveal a hidden picture. The numbers on the sides and top of the grid tell you how many consecutive cells are filled in each row and column.
+### Controls
 
-**Example**:
-- A clue "3 1" means there's a group of 3 filled cells, then at least one empty cell, then 1 filled cell
-- A clue "5" means there are 5 consecutive filled cells
-- A clue "0" means the entire row/column is empty
+| Action | Input |
+|---|---|
+| Fill a cell | Left-click |
+| Mark a cell empty | Right-click **or** Shift+click |
+| Check solution | "Check Solution" button |
+| Reset progress | "Reset" button |
 
-**Tips**:
-1. Start with rows/columns that have large numbers
-2. Look for rows/columns where the numbers add up to the total size
-3. Mark cells you know are empty with right-click
-4. Use logic - if you know cells are filled, count forward/backward from the clues
+## Testing
 
-## Project Structure
+There is currently no test suite or linter configured for this project. Contributions to add testing are welcome (see [Contributing](#contributing)).
+
+## Architecture
+
+The application is a zero-dependency, static site built with vanilla HTML, CSS, and JavaScript. All state is stored in the browser via `localStorage` (puzzles and user accounts) and `sessionStorage` (current login session).
 
 ```
 Nonograms/
-├── index.html          # Main application page
+├── index.html              # Single-page application shell
 ├── css/
-│   └── styles.css      # All styling and responsive design
+│   └── styles.css          # All styling and responsive layout
 ├── js/
-│   ├── app.js          # Main application logic and UI management
-│   ├── auth.js         # Authentication and user management
-│   ├── storage.js      # LocalStorage data management
-│   ├── nonogram.js     # Puzzle game logic and rendering
-│   ├── photoProcessor.js  # Image to puzzle conversion
-│   └── solver.js       # Puzzle solving algorithms
-└── README.md           # This file
+│   ├── app.js              # Top-level UI logic and event wiring
+│   ├── auth.js             # Registration, login, logout (localStorage)
+│   ├── storage.js          # CRUD operations for puzzle data (localStorage)
+│   ├── nonogram.js         # Puzzle model, clue calculation, grid rendering
+│   ├── photoProcessor.js   # Image-to-grid conversion (grayscale threshold)
+│   └── solver.js           # Constraint-propagation solver (work-in-progress)
+├── .github/
+│   └── workflows/
+│       └── copilot-assignment.yml  # Auto-assigns Copilot to new issues
+├── .gitignore
+└── README.md
 ```
 
-## Features in Detail
+### Key Modules
 
-### Puzzle Creation
-- Support for multiple grid sizes
-- Real-time visual feedback while designing
-- Preview of puzzles before playing
-- Automatic clue generation
+| Module | Responsibility |
+|---|---|
+| `auth.js` | User accounts stored in `localStorage`. Passwords are base64-encoded — **this is for demo purposes only and is not secure**. |
+| `storage.js` | Saves and retrieves puzzles from `localStorage`, supports filtering by grid size. |
+| `nonogram.js` | Core game logic: creates grids, computes row/column clues, renders the editor and play views, and checks solutions. |
+| `photoProcessor.js` | Converts an uploaded image to a black-and-white grid using a fixed grayscale threshold (128). |
+| `solver.js` | Contains a constraint-propagation line solver. **Note:** the solver is not yet integrated into the main application UI; the "Solve Puzzle" view currently processes images through `photoProcessor` instead. |
 
-### Photo-to-Puzzle Conversion
-- Upload any image file
-- Automatically converts to black and white grid
-- Adjustable threshold for image processing
-- Maintains aspect ratio
+### Data Flow
 
-### Puzzle Solver
-- Basic constraint propagation algorithm
-- Line-solving techniques
-- Support for uploaded puzzle screenshots
-- Camera integration for mobile devices
-
-### Responsive Design
-- Works on desktop, tablet, and mobile devices
-- Touch-friendly interface
-- Adaptive grid sizing
-- Mobile-optimized controls
-
-## Browser Compatibility
-
-- Chrome/Edge: ✅ Fully supported
-- Firefox: ✅ Fully supported
-- Safari: ✅ Fully supported
-- Opera: ✅ Fully supported
-
-**Note**: Camera features require HTTPS in production environments.
+1. Scripts are loaded in order via `<script>` tags (no module bundler).
+2. Each module registers a singleton on `window` (e.g., `window.authManager`, `window.storageManager`).
+3. `app.js` initialises last, reads the login state, and wires up all DOM event listeners.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! To get started:
 
-## License
+1. Fork the repository and create a feature branch from `main`:
+   ```bash
+   git checkout -b feat/my-feature
+   ```
+2. Make your changes — there is no build step, so just edit and reload the browser.
+3. Open a pull request against `main` with a clear description of what changed and why.
 
-This project is open source and available under the MIT License.
+### Branch Naming
+
+| Prefix | Use |
+|---|---|
+| `feat/` | New features |
+| `fix/` | Bug fixes |
+| `docs/` | Documentation only |
+| `refactor/` | Code restructuring with no behaviour change |
+
+### Code Style
+
+- Vanilla JavaScript with ES6 `class` syntax.
+- No external dependencies — keep it that way unless there is a strong reason.
+- Comment code only where the intent is non-obvious.
 
 ## Credits
 
 Created with ❤️ for puzzle enthusiasts everywhere.
 
-Nonograms (Picture Cross) were invented by Non Ishida and Tetsuya Nishio in Japan in the late 1980s.
+Nonograms were invented by Non Ishida and Tetsuya Nishio in Japan in the late 1980s.
