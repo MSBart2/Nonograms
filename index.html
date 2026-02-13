@@ -77,6 +77,12 @@
                                     <option value="10">10x10</option>
                                     <option value="15">15x15</option>
                                     <option value="20">20x20</option>
+                                    <option value="25">25x25</option>
+                                    <option value="30">30x30</option>
+                                    <option value="35">35x35</option>
+                                    <option value="40">40x40</option>
+                                    <option value="45">45x45</option>
+                                    <option value="50">50x50</option>
                                 </select>
                             </div>
                             <div id="puzzleList" class="puzzle-grid">
@@ -100,6 +106,12 @@
                                             <option value="10" selected>10x10</option>
                                             <option value="15">15x15</option>
                                             <option value="20">20x20</option>
+                                            <option value="25">25x25</option>
+                                            <option value="30">30x30</option>
+                                            <option value="35">35x35</option>
+                                            <option value="40">40x40</option>
+                                            <option value="45">45x45</option>
+                                            <option value="50">50x50</option>
                                         </select>
                                     </div>
                                     <button type="submit" class="btn btn-primary">Create Grid</button>
@@ -126,13 +138,26 @@
                                         <input type="text" id="photoPuzzleName" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="photoPuzzleSize">Size</label>
+                                        <label for="photoPuzzleSize">Grid Size (max 50×50)</label>
                                         <select id="photoPuzzleSize">
                                             <option value="5">5x5</option>
                                             <option value="10" selected>10x10</option>
                                             <option value="15">15x15</option>
                                             <option value="20">20x20</option>
+                                            <option value="25">25x25</option>
+                                            <option value="30">30x30</option>
+                                            <option value="35">35x35</option>
+                                            <option value="40">40x40</option>
+                                            <option value="45">45x45</option>
+                                            <option value="50">50x50</option>
                                         </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="photoThreshold">
+                                            Brightness Threshold: <span id="thresholdValue">128</span>
+                                        </label>
+                                        <input type="range" id="photoThreshold" min="1" max="255" value="128" class="threshold-slider">
+                                        <p class="help-text">Lower values fill only the darkest pixels; higher values fill more of the image.</p>
                                     </div>
                                     <div class="form-group">
                                         <label for="photoUpload">Upload Photo</label>

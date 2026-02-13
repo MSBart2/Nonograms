@@ -98,6 +98,14 @@ class NonogramApp {
             });
         }
 
+        // Threshold slider label update
+        const thresholdSlider = document.getElementById('photoThreshold');
+        if (thresholdSlider) {
+            thresholdSlider.addEventListener('input', (e) => {
+                document.getElementById('thresholdValue').textContent = e.target.value;
+            });
+        }
+
         // Size filter
         const sizeFilter = document.getElementById('sizeFilter');
         if (sizeFilter) {
@@ -350,6 +358,7 @@ class NonogramApp {
     async createPuzzleFromPhoto() {
         const name = document.getElementById('photoPuzzleName').value;
         const size = parseInt(document.getElementById('photoPuzzleSize').value);
+        const threshold = parseInt(document.getElementById('photoThreshold').value) || 128;
         const fileInput = document.getElementById('photoUpload');
 
         if (fileInput.files.length === 0) {
@@ -359,7 +368,7 @@ class NonogramApp {
 
         try {
             this.showNotification('Processing image...', 'info');
-            const grid = await window.photoProcessor.processImage(fileInput.files[0], size);
+            const grid = await window.photoProcessor.processImage(fileInput.files[0], size, threshold);
 
             const puzzle = {
                 name,
