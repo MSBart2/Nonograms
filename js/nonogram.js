@@ -97,6 +97,7 @@ class NonogramGame {
         gridElement.className = 'game-grid';
         
         const cellSize = Math.max(6, Math.min(35, Math.floor(700 / (this.size + maxRowClueLength))));
+        // Scale clue font size proportionally to cell size for readability on large grids
         const clueFontSize = Math.max(0.45, Math.min(0.8, cellSize / 18));
         
         gridElement.style.gridTemplateColumns = `repeat(${maxRowClueLength}, ${cellSize}px) repeat(${this.size}, ${cellSize}px)`;
