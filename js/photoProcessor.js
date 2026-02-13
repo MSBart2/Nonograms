@@ -5,7 +5,14 @@ class PhotoProcessor {
         this.ctx = this.canvas.getContext('2d');
     }
 
+    static get MAX_GRID_SIZE() {
+        return 50;
+    }
+
     async processImage(file, size, threshold = 128) {
+        if (size < 1 || size > PhotoProcessor.MAX_GRID_SIZE) {
+            throw new Error(`Grid size must be between 1 and ${PhotoProcessor.MAX_GRID_SIZE}`);
+        }
         return new Promise((resolve, reject) => {
             const img = new Image();
             const reader = new FileReader();

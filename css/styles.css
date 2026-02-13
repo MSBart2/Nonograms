@@ -394,6 +394,12 @@ body {
     margin-top: 1rem;
 }
 
+.threshold-slider {
+    width: 100%;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
 /* Solve View */
 .upload-options {
     display: flex;
@@ -457,6 +463,8 @@ body {
     box-shadow: var(--shadow-lg);
     padding: 2rem;
     margin: 2rem 0;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .game-grid {

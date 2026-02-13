@@ -57,7 +57,7 @@ class NonogramGame {
         gridElement.className = 'editor-grid';
         gridElement.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
         
-        const cellSize = Math.min(30, Math.floor(400 / this.size));
+        const cellSize = Math.max(6, Math.min(30, Math.floor(500 / this.size)));
         gridElement.style.width = `${cellSize * this.size}px`;
 
         for (let i = 0; i < this.size; i++) {
@@ -96,12 +96,14 @@ class NonogramGame {
         const gridElement = document.createElement('div');
         gridElement.className = 'game-grid';
         
-        const cellSize = Math.min(35, Math.floor(500 / (this.size + maxRowClueLength)));
+        const cellSize = Math.max(6, Math.min(35, Math.floor(700 / (this.size + maxRowClueLength))));
+        const clueFontSize = Math.max(0.45, Math.min(0.8, cellSize / 18));
         
         gridElement.style.gridTemplateColumns = `repeat(${maxRowClueLength}, ${cellSize}px) repeat(${this.size}, ${cellSize}px)`;
         gridElement.style.gap = '1px';
         gridElement.style.background = '#e2e8f0';
         gridElement.style.padding = '1px';
+        gridElement.style.overflowX = 'auto';
 
         // Top-left corner (empty space)
         for (let i = 0; i < maxColClueLength; i++) {
@@ -125,6 +127,7 @@ class NonogramGame {
                 clueCell.style.display = 'flex';
                 clueCell.style.alignItems = 'center';
                 clueCell.style.justifyContent = 'center';
+                clueCell.style.fontSize = `${clueFontSize}rem`;
                 
                 const clueIndex = i - (maxColClueLength - colClues[j].length);
                 if (clueIndex >= 0) {
@@ -147,6 +150,7 @@ class NonogramGame {
                 clueCell.style.display = 'flex';
                 clueCell.style.alignItems = 'center';
                 clueCell.style.justifyContent = 'center';
+                clueCell.style.fontSize = `${clueFontSize}rem`;
                 
                 const clueIndex = k - (maxRowClueLength - rowClues[i].length);
                 if (clueIndex >= 0) {
