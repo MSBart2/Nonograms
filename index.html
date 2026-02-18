@@ -174,8 +174,47 @@
 
                         <!-- Solve Puzzle View -->
                         <div id="solveView" class="view">
-                            <h2>Solve Puzzle from Image</h2>
+                            <h2>Solve Puzzle</h2>
+                            
+                            <!-- Manual Clue Input Method -->
                             <div class="card">
+                                <h3>Solve from Clues</h3>
+                                <form id="solverForm">
+                                    <div class="form-group">
+                                        <label for="solverRows">Number of Rows</label>
+                                        <input type="number" id="solverRows" min="3" max="50" value="5" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="solverCols">Number of Columns</label>
+                                        <input type="number" id="solverCols" min="3" max="50" value="5" required>
+                                    </div>
+                                    <button type="button" id="generateClueInputs" class="btn btn-secondary">Generate Clue Fields</button>
+                                </form>
+                                
+                                <div id="clueInputSection" class="clue-input-section hidden">
+                                    <div class="clue-inputs-container">
+                                        <div class="clue-column">
+                                            <h4>Row Clues</h4>
+                                            <p class="help-text">Enter numbers separated by commas (e.g., "3,1,2" or "0" for empty row)</p>
+                                            <div id="rowCluesInputs"></div>
+                                        </div>
+                                        <div class="clue-column">
+                                            <h4>Column Clues</h4>
+                                            <p class="help-text">Enter numbers separated by commas (e.g., "2,1" or "0" for empty column)</p>
+                                            <div id="colCluesInputs"></div>
+                                        </div>
+                                    </div>
+                                    <div class="solver-actions">
+                                        <button id="solvePuzzleBtn" class="btn btn-primary">Solve Puzzle</button>
+                                        <button id="clearSolverBtn" class="btn btn-secondary">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Image-Based Method (Optional) -->
+                            <div class="card">
+                                <h3>Solve from Image (Experimental)</h3>
+                                <p class="help-text">This feature converts an image to a puzzle grid but doesn't extract clues yet.</p>
                                 <div class="upload-options">
                                     <div class="form-group">
                                         <label for="puzzleScreenshot">Upload Screenshot</label>
@@ -191,9 +230,13 @@
                                 <button id="capturePhoto" class="btn btn-primary hidden">Capture</button>
                                 <canvas id="captureCanvas" class="hidden"></canvas>
                             </div>
+                            
                             <div id="solveResult" class="solve-result hidden">
                                 <h3>Solution</h3>
                                 <div id="solutionDisplay"></div>
+                                <div class="solution-actions">
+                                    <button id="saveSolutionBtn" class="btn btn-primary hidden">Save to My Puzzles</button>
+                                </div>
                             </div>
                         </div>
 

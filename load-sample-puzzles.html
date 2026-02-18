@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Sample Puzzles - Nonograms</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #6366f1;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #progress {
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .log-line {
+            margin: 5px 0;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Load Sample Puzzles</h1>
+        
+        <div class="info">
+            <p><strong>This utility will create 100 sample puzzles for your Nonograms app.</strong></p>
+            <p>It will generate 10 different puzzle patterns for each grid size (5×5 to 50×50).</p>
+        </div>
+
+        <p><strong>Puzzle types to be created:</strong></p>
+        <ul>
+            <li>Checkerboard</li>
+            <li>Frame</li>
+            <li>Diagonal</li>
+            <li>Anti-Diagonal</li>
+            <li>Cross</li>
+            <li>Diamond</li>
+            <li>Circle</li>
+            <li>Vertical Stripes</li>
+            <li>Four Corners</li>
+            <li>Random Pattern</li>
+        </ul>
+
+        <p><strong>Grid sizes:</strong> 5×5, 10×10, 15×15, 20×20, 25×25, 30×30, 35×35, 40×40, 45×45, 50×50</p>
+
+        <button id="generateBtn" onclick="loadSamplePuzzles()">Generate 100 Sample Puzzles</button>
+        <button onclick="clearAllPuzzles()" style="background: #ef4444; margin-left: 10px;">Clear All Puzzles</button>
+        
+        <div id="progress" style="display: none;"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/storage.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const progress = document.getElementById('progress');
+            progress.style.display = 'block';
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = message;
+            progress.appendChild(line);
+            progress.scrollTop = progress.scrollHeight;
+        }
+
+        function loadSamplePuzzles() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            
+            const progress = document.getElementById('progress');
+            progress.innerHTML = '';
+            progress.style.display = 'block';
+
+            log('🚀 Starting puzzle generation...');
+            log('');
+
+            // Ensure we have a user (create demo user if needed)
+            if (!window.authManager.isLoggedIn()) {
+                try {
+                    window.authManager.register('demo', 'demo123');
+                    window.authManager.login('demo', 'demo123');
+                    log('✓ Created and logged in as demo user', 'info');
+                } catch (e) {
+                    try {
+                        window.authManager.login('demo', 'demo123');
+                        log('✓ Logged in as demo user', 'info');
+                    } catch (e2) {
+                        log('✗ Failed to create demo user. Please register manually first.', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+            }
+
+            const gridSizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+            
+            const patterns = {
+                checkerboard: (size) => {
+                    const grid = [];
+                    for (let i = 0; i < size; i++) {
+                        const row = [];
+                        for (let j = 0; j < size; j++) {
+                            row.push((i + j) % 2);
+                        }
+                        grid.push(row);
+                    }
+                    return grid;
+                },
+                
+                border: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    for (let i = 0; i < size; i++) {
+                        grid[0][i] = 1;
+                        grid[size-1][i] = 1;
+                        grid[i][0] = 1;
+                        grid[i][size-1] = 1;
+                    }
+                    return grid;
+                },
+                
+                diagonal: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    for (let i = 0; i < size; i++) {
+                        grid[i][i] = 1;
+                    }
+                    return grid;
+                },
+                
+                antiDiagonal: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    for (let i = 0; i < size; i++) {
+                        grid[i][size - 1 - i] = 1;
+                    }
+                    return grid;
+                },
+                
+                cross: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    const mid = Math.floor(size / 2);
+                    for (let i = 0; i < size; i++) {
+                        grid[mid][i] = 1;
+                        grid[i][mid] = 1;
+                    }
+                    return grid;
+                },
+                
+                diamond: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    const mid = Math.floor(size / 2);
+                    for (let i = 0; i < size; i++) {
+                        for (let j = 0; j < size; j++) {
+                            if (Math.abs(i - mid) + Math.abs(j - mid) <= mid) {
+                                grid[i][j] = 1;
+                            }
+                        }
+                    }
+                    return grid;
+                },
+                
+                circle: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    const mid = size / 2;
+                    const radius = size / 2 - 1;
+                    for (let i = 0; i < size; i++) {
+                        for (let j = 0; j < size; j++) {
+                            const dist = Math.sqrt((i - mid + 0.5) ** 2 + (j - mid + 0.5) ** 2);
+                            if (dist <= radius) {
+                                grid[i][j] = 1;
+                            }
+                        }
+                    }
+                    return grid;
+                },
+                
+                stripes: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    for (let i = 0; i < size; i++) {
+                        for (let j = 0; j < size; j++) {
+                            grid[i][j] = j % 2;
+                        }
+                    }
+                    return grid;
+                },
+                
+                corners: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    const cornerSize = Math.floor(size / 3);
+                    for (let i = 0; i < cornerSize; i++) {
+                        for (let j = 0; j < cornerSize; j++) {
+                            grid[i][j] = 1;
+                            grid[i][size - 1 - j] = 1;
+                            grid[size - 1 - i][j] = 1;
+                            grid[size - 1 - i][size - 1 - j] = 1;
+                        }
+                    }
+                    return grid;
+                },
+                
+                random: (size) => {
+                    const grid = Array(size).fill(null).map(() => Array(size).fill(0));
+                    for (let i = 0; i < size; i++) {
+                        for (let j = 0; j < size; j++) {
+                            grid[i][j] = Math.random() < 0.4 ? 1 : 0;
+                        }
+                    }
+                    return grid;
+                }
+            };
+
+            const puzzleTemplates = [
+                { pattern: 'checkerboard', name: 'Checkerboard' },
+                { pattern: 'border', name: 'Frame' },
+                { pattern: 'diagonal', name: 'Diagonal' },
+                { pattern: 'antiDiagonal', name: 'Anti-Diagonal' },
+                { pattern: 'cross', name: 'Cross' },
+                { pattern: 'diamond', name: 'Diamond' },
+                { pattern: 'circle', name: 'Circle' },
+                { pattern: 'stripes', name: 'Vertical Stripes' },
+                { pattern: 'corners', name: 'Four Corners' },
+                { pattern: 'random', name: 'Random Pattern' }
+            ];
+
+            let totalCreated = 0;
+
+            gridSizes.forEach(size => {
+                log(`\n📏 Creating puzzles for ${size}×${size}...`);
+                
+                puzzleTemplates.forEach(template => {
+                    const grid = patterns[template.pattern](size);
+                    
+                    const puzzle = {
+                        name: `${template.name} ${size}×${size}`,
+                        size: size,
+                        grid: grid
+                    };
+
+                    try {
+                        window.storageManager.savePuzzle(puzzle);
+                        totalCreated++;
+                        log(`  ✓ ${puzzle.name}`);
+                    } catch (error) {
+                        log(`  ✗ Failed: ${puzzle.name} - ${error.message}`, 'error');
+                    }
+                });
+            });
+
+            log('');
+            log(`🎉 Successfully created ${totalCreated} sample puzzles!`);
+            log('');
+            log('✨ You can now close this page and go to Browse Puzzles to see them all.');
+            log('💡 Tip: Use the size filter to browse puzzles by grid size.');
+            
+            setTimeout(() => {
+                const container = document.querySelector('.container');
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success';
+                successDiv.innerHTML = `
+                    <strong>✅ Done!</strong><br>
+                    Created ${totalCreated} puzzles. 
+                    <a href="index.html" style="color: #6366f1; font-weight: 600;">Go to main app →</a>
+                `;
+                container.insertBefore(successDiv, progress);
+            }, 500);
+            
+            btn.disabled = false;
+        }
+
+        function clearAllPuzzles() {
+            if (confirm('Are you sure you want to delete ALL puzzles? This cannot be undone.')) {
+                localStorage.removeItem('nonogram_puzzles');
+                log('🗑️ All puzzles have been cleared.', 'warning');
+                log('Refresh the page or click Generate to create new ones.');
+            }
+        }
+    </script>
+</body>
+</html>

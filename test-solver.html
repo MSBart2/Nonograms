@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solver Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-case {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #6366f1;
+        }
+        .grid {
+            display: inline-grid;
+            gap: 1px;
+            background: #ddd;
+            border: 2px solid #ddd;
+            margin: 10px 0;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            background: white;
+        }
+        .cell.filled {
+            background: #6366f1;
+        }
+        .cell.unknown {
+            background: #ffeb3b;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result.partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nonogram Solver Tests</h1>
+    <div id="testResults"></div>
+
+    <script src="js/solver.js"></script>
+    <script>
+        const testCases = [
+            {
+                name: "Simple 5x5 Cross",
+                rowClues: [[0], [1], [3], [1], [0]],
+                colClues: [[0], [1], [3], [1], [0]],
+                expectedSolution: [
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 0],
+                    [0, 1, 1, 1, 0],
+                    [0, 0, 1, 0, 0],
+                    [0, 0, 0, 0, 0]
+                ]
+            },
+            {
+                name: "5x5 Diagonal",
+                rowClues: [[1], [1], [1], [1], [1]],
+                colClues: [[1], [1], [1], [1], [1]],
+                expectedSolution: null // Multiple solutions possible
+            },
+            {
+                name: "5x5 Heart Pattern",
+                rowClues: [[2], [3], [5], [3], [1]],
+                colClues: [[1], [3], [5], [3], [1]],
+                expectedSolution: [
+                    [1, 0, 0, 0, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [0, 1, 1, 1, 0],
+                    [0, 0, 1, 0, 0]
+                ]
+            },
+            {
+                name: "10x10 Smiley Face",
+                rowClues: [[0], [1,1], [1,1], [0], [0], [1,1], [1,1], [0], [3], [0]],
+                colClues: [[0], [3], [1,1], [1], [0], [0], [1], [1,1], [3], [0]],
+                expectedSolution: null
+            },
+            {
+                name: "3x3 Full Grid",
+                rowClues: [[3], [3], [3]],
+                colClues: [[3], [3], [3]],
+                expectedSolution: [
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ]
+            },
+            {
+                name: "3x3 Empty Grid",
+                rowClues: [[0], [0], [0]],
+                colClues: [[0], [0], [0]],
+                expectedSolution: [
+                    [0, 0, 0],
+                    [0, 0, 0],
+                    [0, 0, 0]
+                ]
+            }
+        ];
+
+        function renderGrid(grid, containerId) {
+            const container = document.getElementById(containerId);
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'grid';
+            gridDiv.style.gridTemplateColumns = `repeat(${grid[0].length}, 20px)`;
+
+            grid.forEach(row => {
+                row.forEach(cell => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+                    if (cell === 1) {
+                        cellDiv.classList.add('filled');
+                    } else if (cell === -1) {
+                        cellDiv.classList.add('unknown');
+                    }
+                    gridDiv.appendChild(cellDiv);
+                });
+            });
+
+            container.appendChild(gridDiv);
+        }
+
+        function compareGrids(actual, expected) {
+            if (!expected) return null; // No expected solution
+            
+            for (let i = 0; i < actual.length; i++) {
+                for (let j = 0; j < actual[i].length; j++) {
+                    if (actual[i][j] !== expected[i][j]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function runTests() {
+            const resultsDiv = document.getElementById('testResults');
+
+            testCases.forEach((testCase, index) => {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-case';
+                testDiv.id = `test-${index}`;
+
+                const title = document.createElement('h3');
+                title.textContent = `Test ${index + 1}: ${testCase.name}`;
+                testDiv.appendChild(title);
+
+                const cluesDiv = document.createElement('div');
+                cluesDiv.innerHTML = `
+                    <p><strong>Row Clues:</strong> ${testCase.rowClues.map(c => '[' + c.join(',') + ']').join(', ')}</p>
+                    <p><strong>Col Clues:</strong> ${testCase.colClues.map(c => '[' + c.join(',') + ']').join(', ')}</p>
+                `;
+                testDiv.appendChild(cluesDiv);
+
+                try {
+                    const startTime = performance.now();
+                    const solution = window.nonogramSolver.solveComplete(testCase.rowClues, testCase.colClues);
+                    const endTime = performance.now();
+                    const duration = (endTime - startTime).toFixed(2);
+
+                    const hasUnknown = solution.some(row => row.some(cell => cell === -1));
+                    
+                    const resultDiv = document.createElement('div');
+                    
+                    if (testCase.expectedSolution) {
+                        const matches = compareGrids(solution, testCase.expectedSolution);
+                        if (matches) {
+                            resultDiv.className = 'result success';
+                            resultDiv.textContent = `✓ PASS - Solved correctly in ${duration}ms`;
+                        } else if (hasUnknown) {
+                            resultDiv.className = 'result partial';
+                            resultDiv.textContent = `⚠ PARTIAL - Some cells unknown (${duration}ms)`;
+                        } else {
+                            resultDiv.className = 'result error';
+                            resultDiv.textContent = `✗ FAIL - Incorrect solution (${duration}ms)`;
+                        }
+                    } else {
+                        if (hasUnknown) {
+                            resultDiv.className = 'result partial';
+                            resultDiv.textContent = `⚠ PARTIAL - Solved with unknown cells (${duration}ms)`;
+                        } else {
+                            resultDiv.className = 'result success';
+                            resultDiv.textContent = `✓ SOLVED - Fully solved in ${duration}ms`;
+                        }
+                    }
+                    
+                    testDiv.appendChild(resultDiv);
+
+                    const solutionLabel = document.createElement('p');
+                    solutionLabel.innerHTML = '<strong>Solution:</strong>';
+                    testDiv.appendChild(solutionLabel);
+                    renderGrid(solution, `test-${index}`);
+
+                    if (testCase.expectedSolution) {
+                        const expectedLabel = document.createElement('p');
+                        expectedLabel.innerHTML = '<strong>Expected:</strong>';
+                        testDiv.appendChild(expectedLabel);
+                        renderGrid(testCase.expectedSolution, `test-${index}`);
+                    }
+
+                } catch (error) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `✗ ERROR - ${error.message}`;
+                    testDiv.appendChild(resultDiv);
+                }
+
+                resultsDiv.appendChild(testDiv);
+            });
+        }
+
+        // Run tests when page loads
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

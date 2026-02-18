@@ -3,6 +3,7 @@ class NonogramApp {
     constructor() {
         this.currentView = 'browse';
         this.currentGame = null;
+        this.currentSolution = null;
         this.cameraStream = null;
         this.init();
     }
@@ -158,6 +159,35 @@ class NonogramApp {
         if (backBtn) {
             backBtn.addEventListener('click', () => {
                 this.switchView('browse');
+            });
+        }
+
+        // Solver clue input buttons
+        const generateClueBtn = document.getElementById('generateClueInputs');
+        if (generateClueBtn) {
+            generateClueBtn.addEventListener('click', () => {
+                this.generateClueInputFields();
+            });
+        }
+
+        const solvePuzzleBtn = document.getElementById('solvePuzzleBtn');
+        if (solvePuzzleBtn) {
+            solvePuzzleBtn.addEventListener('click', () => {
+                this.solvePuzzleFromClues();
+            });
+        }
+
+        const clearSolverBtn = document.getElementById('clearSolverBtn');
+        if (clearSolverBtn) {
+            clearSolverBtn.addEventListener('click', () => {
+                this.clearSolver();
+            });
+        }
+
+        const saveSolutionBtn = document.getElementById('saveSolutionBtn');
+        if (saveSolutionBtn) {
+            saveSolutionBtn.addEventListener('click', () => {
+                this.saveSolvedPuzzle();
             });
         }
     }
@@ -490,6 +520,181 @@ class NonogramApp {
         setTimeout(() => {
             notification.remove();
         }, 3000);
+    }
+
+    generateClueInputFields() {
+        const rows = parseInt(document.getElementById('solverRows').value);
+        const cols = parseInt(document.getElementById('solverCols').value);
+
+        if (rows < 3 || rows > 50 || cols < 3 || cols > 50) {
+            this.showNotification('Grid size must be between 3 and 50', 'error');
+            return;
+        }
+
+        const rowInputsDiv = document.getElementById('rowCluesInputs');
+        const colInputsDiv = document.getElementById('colCluesInputs');
+
+        rowInputsDiv.innerHTML = '';
+        colInputsDiv.innerHTML = '';
+
+        // Generate row clue inputs
+        for (let i = 0; i < rows; i++) {
+            const group = document.createElement('div');
+            group.className = 'clue-input-group';
+            
+            const label = document.createElement('label');
+            label.textContent = `Row ${i + 1}:`;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `rowClue${i}`;
+            input.placeholder = 'e.g., 3,1,2 or 0';
+            
+            group.appendChild(label);
+            group.appendChild(input);
+            rowInputsDiv.appendChild(group);
+        }
+
+        // Generate column clue inputs
+        for (let i = 0; i < cols; i++) {
+            const group = document.createElement('div');
+            group.className = 'clue-input-group';
+            
+            const label = document.createElement('label');
+            label.textContent = `Col ${i + 1}:`;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `colClue${i}`;
+            input.placeholder = 'e.g., 2,1 or 0';
+            
+            group.appendChild(label);
+            group.appendChild(input);
+            colInputsDiv.appendChild(group);
+        }
+
+        document.getElementById('clueInputSection').classList.remove('hidden');
+        this.showNotification('Clue fields generated!', 'success');
+    }
+
+    solvePuzzleFromClues() {
+        const rows = parseInt(document.getElementById('solverRows').value);
+        const cols = parseInt(document.getElementById('solverCols').value);
+
+        const rowClues = [];
+        const colClues = [];
+
+        // Parse row clues
+        for (let i = 0; i < rows; i++) {
+            const input = document.getElementById(`rowClue${i}`);
+            if (!input || !input.value.trim()) {
+                this.showNotification(`Please enter clue for Row ${i + 1}`, 'error');
+                return;
+            }
+            
+            const clueStr = input.value.trim();
+            const clue = clueStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            if (clue.length === 0) {
+                this.showNotification(`Invalid clue format for Row ${i + 1}`, 'error');
+                return;
+            }
+            
+            rowClues.push(clue);
+        }
+
+        // Parse column clues
+        for (let i = 0; i < cols; i++) {
+            const input = document.getElementById(`colClue${i}`);
+            if (!input || !input.value.trim()) {
+                this.showNotification(`Please enter clue for Column ${i + 1}`, 'error');
+                return;
+            }
+            
+            const clueStr = input.value.trim();
+            const clue = clueStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            if (clue.length === 0) {
+                this.showNotification(`Invalid clue format for Column ${i + 1}`, 'error');
+                return;
+            }
+            
+            colClues.push(clue);
+        }
+
+        this.showNotification('Solving puzzle...', 'info');
+
+        try {
+            const solution = window.nonogramSolver.solveComplete(rowClues, colClues);
+            
+            // Check if puzzle is fully solved
+            const hasUnknown = solution.some(row => row.some(cell => cell === -1));
+            
+            if (hasUnknown) {
+                this.showNotification('Puzzle partially solved. Some cells remain unknown.', 'info');
+            } else {
+                this.showNotification('Puzzle solved successfully!', 'success');
+            }
+
+            // Display the solution
+            this.displaySolution(solution, rowClues, colClues);
+            
+        } catch (error) {
+            this.showNotification('Failed to solve puzzle: ' + error.message, 'error');
+        }
+    }
+
+    displaySolution(solution, rowClues, colClues) {
+        const resultDiv = document.getElementById('solveResult');
+        resultDiv.classList.remove('hidden');
+        
+        const solutionDiv = document.getElementById('solutionDisplay');
+        solutionDiv.innerHTML = '';
+
+        // Create a NonogramGame instance with the solution
+        const size = solution.length;
+        const grid = solution.map(row => row.map(cell => cell === 1 ? 1 : 0));
+        
+        const game = new NonogramGame(size, grid);
+        game.renderGame('solutionDisplay', true);
+        
+        // Store solution for saving later
+        this.currentSolution = { grid, rowClues, colClues };
+        
+        // Show save button
+        document.getElementById('saveSolutionBtn').classList.remove('hidden');
+    }
+
+    clearSolver() {
+        document.getElementById('clueInputSection').classList.add('hidden');
+        document.getElementById('solveResult').classList.add('hidden');
+        document.getElementById('rowCluesInputs').innerHTML = '';
+        document.getElementById('colCluesInputs').innerHTML = '';
+        document.getElementById('saveSolutionBtn').classList.add('hidden');
+        this.currentSolution = null;
+        this.showNotification('Solver cleared', 'info');
+    }
+
+    saveSolvedPuzzle() {
+        if (!this.currentSolution) {
+            this.showNotification('No solution to save', 'error');
+            return;
+        }
+
+        const puzzleName = prompt('Enter a name for this puzzle:');
+        if (!puzzleName || !puzzleName.trim()) {
+            this.showNotification('Puzzle name is required', 'error');
+            return;
+        }
+
+        const puzzle = {
+            name: puzzleName.trim(),
+            size: this.currentSolution.grid.length,
+            grid: this.currentSolution.grid
+        };
+
+        window.storageManager.savePuzzle(puzzle);
+        this.showNotification('Puzzle saved successfully!', 'success');
     }
 }
 
