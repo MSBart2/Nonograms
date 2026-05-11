@@ -32,18 +32,7 @@ class NonogramApp {
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
 
-        const username = window.authManager.getCurrentUser();
-        document.getElementById('userDisplay').textContent = username ? `👤 ${username}` : '👤 Guest';
-
-        const logoutBtn = document.getElementById('logoutBtn');
-        const loginNavBtn = document.getElementById('loginNavBtn');
-        if (username) {
-            if (logoutBtn) logoutBtn.classList.remove('hidden');
-            if (loginNavBtn) loginNavBtn.classList.add('hidden');
-        } else {
-            if (logoutBtn) logoutBtn.classList.add('hidden');
-            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
-        }
+        this._updateNavState();
 
         try {
             const puzzles = window.storageManager.getAllPuzzles();
@@ -55,6 +44,7 @@ class NonogramApp {
     }
 
     _showBoardError(err) {
+        console.error('[NonogramApp] Board load failed:', err);
         const errorState = document.getElementById('puzzleErrorState');
         if (errorState) {
             errorState.classList.remove('hidden');
@@ -65,6 +55,20 @@ class NonogramApp {
                 if (errorState) errorState.classList.add('hidden');
                 this._bootIntoPlay();
             };
+        }
+    }
+
+    _updateNavState() {
+        const username = window.authManager.getCurrentUser();
+        document.getElementById('userDisplay').textContent = username ? `👤 ${username}` : '👤 Guest';
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        if (username) {
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginNavBtn) loginNavBtn.classList.add('hidden');
+        } else {
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
         }
     }
 
@@ -258,18 +262,7 @@ class NonogramApp {
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainScreen').classList.add('active');
         
-        const username = window.authManager.getCurrentUser();
-        document.getElementById('userDisplay').textContent = username ? `👤 ${username}` : '👤 Guest';
-
-        const logoutBtn = document.getElementById('logoutBtn');
-        const loginNavBtn = document.getElementById('loginNavBtn');
-        if (username) {
-            if (logoutBtn) logoutBtn.classList.remove('hidden');
-            if (loginNavBtn) loginNavBtn.classList.add('hidden');
-        } else {
-            if (logoutBtn) logoutBtn.classList.add('hidden');
-            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
-        }
+        this._updateNavState();
         
         this.loadPuzzles();
     }
