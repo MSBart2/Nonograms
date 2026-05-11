@@ -34,7 +34,11 @@ Then visit `http://localhost:8000`.
 
 ### First-Time Setup
 
-1. **Register** — enter a username (≥ 3 chars) and password (≥ 6 chars), then click "Register".
+Opening `index.html` (or `http://localhost:8000`) boots you directly into a playable puzzle — no login required. If no saved puzzles exist yet, a built-in 5×5 "Welcome Puzzle" is shown automatically so the board is never empty.
+
+To save puzzles and track your own creations:
+
+1. **Register** (optional) — click "Login / Register" in the top-right nav, then enter a username (≥ 3 chars) and password (≥ 6 chars) and click "Register".
 2. **Load sample puzzles** (optional) — open `load-sample-puzzles.html` in a browser and click "Generate 100 Sample Puzzles" to populate the app with a variety of puzzles across all grid sizes.
 3. **Create a puzzle** — go to *Create Puzzle*, pick a name and grid size (5×5 to 50×50), click cells to toggle them, and save.
 4. **Play** — go to *Browse Puzzles*, click a card, and solve it.
@@ -79,6 +83,10 @@ You can also clear all puzzles and regenerate them at any time.
 
 ## Testing
 
+Open `smoke-test.html` in a browser to run 6 automated assertions that verify the app boots directly into play mode with a rendered board (no login required). All tests should show ✅ PASS.
+
+Open `test-solver.html` to run 6 automated solver tests covering a range of puzzle sizes and patterns.
+
 There is currently no test suite or linter configured for this project. Contributions to add testing are welcome (see [Contributing](#contributing)).
 
 ## Architecture
@@ -89,6 +97,7 @@ The application is a zero-dependency, static site built with vanilla HTML, CSS, 
 Nonograms/
 ├── index.html                   # Single-page application shell
 ├── load-sample-puzzles.html     # Utility to generate 100 sample puzzles
+├── smoke-test.html              # Smoke tests: verifies boot-into-play behavior (6 assertions)
 ├── test-solver.html             # Automated test suite for the solver
 ├── css/
 │   └── styles.css               # All styling and responsive layout
@@ -120,7 +129,7 @@ Nonograms/
 
 1. Scripts are loaded in order via `<script>` tags (no module bundler).
 2. Each module registers a singleton on `window` (e.g., `window.authManager`, `window.storageManager`).
-3. `app.js` initialises last, reads the login state, and wires up all DOM event listeners.
+3. `app.js` initialises last, boots directly into play (bypassing auth), and wires up all DOM event listeners. If saved puzzles exist the first one is loaded; otherwise a built-in `DEMO_PUZZLE` is shown.
 
 ## Contributing
 
