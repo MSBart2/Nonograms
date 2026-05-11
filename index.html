@@ -36,6 +36,7 @@
                 <div class="nav-brand">🎨 Nonograms</div>
                 <div class="nav-menu">
                     <span id="userDisplay" class="nav-user"></span>
+                    <button id="loginNavBtn" class="btn btn-text hidden">Login / Register</button>
                     <button id="logoutBtn" class="btn btn-text">Logout</button>
                 </div>
             </nav>
@@ -245,6 +246,10 @@
                             <div class="puzzle-header">
                                 <button id="backToBrowse" class="btn btn-secondary">← Back</button>
                                 <h2 id="currentPuzzleName"></h2>
+                            </div>
+                            <div id="puzzleErrorState" class="error-state hidden">
+                                <p class="error-state__message">⚠️ Couldn't load a puzzle right now.</p>
+                                <button id="puzzleErrorRetry" class="btn btn-primary">Try Again</button>
                             </div>
                             <div id="gameCanvas"></div>
                             <div class="game-controls">

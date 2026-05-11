@@ -1,4 +1,19 @@
 // Main application logic
+const DEMO_PUZZLE = {
+    id: '__demo__',
+    name: 'Welcome Puzzle',
+    size: 5,
+    createdBy: 'system',
+    createdAt: new Date().toISOString(),
+    grid: [
+        [0, 1, 1, 1, 0],
+        [1, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1],
+        [0, 1, 1, 1, 0]
+    ]
+};
+
 class NonogramApp {
     constructor() {
         this.currentView = 'browse';
@@ -9,14 +24,48 @@ class NonogramApp {
     }
 
     init() {
-        // Check if user is logged in
-        if (window.authManager.isLoggedIn()) {
-            this.showMainScreen();
+        this._bootIntoPlay();
+        this.setupEventListeners();
+    }
+
+    _bootIntoPlay() {
+        document.getElementById('loginScreen').classList.remove('active');
+        document.getElementById('mainScreen').classList.add('active');
+
+        const username = window.authManager.getCurrentUser();
+        document.getElementById('userDisplay').textContent = username ? `👤 ${username}` : '👤 Guest';
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        if (username) {
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginNavBtn) loginNavBtn.classList.add('hidden');
         } else {
-            this.showLoginScreen();
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
         }
 
-        this.setupEventListeners();
+        try {
+            const puzzles = window.storageManager.getAllPuzzles();
+            const puzzle = puzzles.length > 0 ? puzzles[0] : DEMO_PUZZLE;
+            this.playPuzzle(puzzle);
+        } catch (e) {
+            this._showBoardError(e);
+        }
+    }
+
+    _showBoardError(err) {
+        const errorState = document.getElementById('puzzleErrorState');
+        if (errorState) {
+            errorState.classList.remove('hidden');
+        }
+        const retryBtn = document.getElementById('puzzleErrorRetry');
+        if (retryBtn) {
+            retryBtn.onclick = () => {
+                if (errorState) errorState.classList.add('hidden');
+                this._bootIntoPlay();
+            };
+        }
     }
 
     setupEventListeners() {
@@ -42,6 +91,14 @@ class NonogramApp {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 this.handleLogout();
+            });
+        }
+
+        // Login nav button (shown for guests)
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        if (loginNavBtn) {
+            loginNavBtn.addEventListener('click', () => {
+                this.showLoginScreen();
             });
         }
 
@@ -202,7 +259,17 @@ class NonogramApp {
         document.getElementById('mainScreen').classList.add('active');
         
         const username = window.authManager.getCurrentUser();
-        document.getElementById('userDisplay').textContent = `👤 ${username}`;
+        document.getElementById('userDisplay').textContent = username ? `👤 ${username}` : '👤 Guest';
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        if (username) {
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginNavBtn) loginNavBtn.classList.add('hidden');
+        } else {
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
+        }
         
         this.loadPuzzles();
     }
@@ -236,7 +303,7 @@ class NonogramApp {
 
     handleLogout() {
         window.authManager.logout();
-        this.showLoginScreen();
+        this._bootIntoPlay();
         this.showNotification('Logged out successfully', 'info');
     }
 

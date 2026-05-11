@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoke Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #6366f1;
+        }
+        .test-case {
+            margin: 16px 0;
+            padding: 16px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #6366f1;
+        }
+        .result {
+            padding: 10px 14px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .result.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        #summary {
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        #summary.all-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        #summary.has-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        iframe {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Nonogram Smoke Tests</h1>
+    <p>Verifies that the app boots into a playable puzzle state without requiring login.</p>
+    <div id="testResults"></div>
+    <div id="summary"></div>
+
+    <iframe id="appFrame" src="index.html"></iframe>
+
+    <script>
+        const assertions = [
+            {
+                name: '#mainScreen has class "active" — main screen shown on boot',
+                fn: (doc) => doc.getElementById('mainScreen').classList.contains('active')
+            },
+            {
+                name: '#loginScreen does NOT have class "active" — auth gate bypassed',
+                fn: (doc) => !doc.getElementById('loginScreen').classList.contains('active')
+            },
+            {
+                name: '#playView has class "active" — landed in play mode',
+                fn: (doc) => doc.getElementById('playView').classList.contains('active')
+            },
+            {
+                name: '.game-grid is present in the DOM — a board grid rendered',
+                fn: (doc) => doc.querySelector('.game-grid') !== null
+            },
+            {
+                name: '.clue-number elements exist — row and column clues rendered',
+                fn: (doc) => doc.querySelectorAll('.clue-number').length > 0
+            },
+            {
+                name: '.game-cell elements exist — interactive cells are in the DOM',
+                fn: (doc) => doc.querySelectorAll('.game-cell').length > 0
+            }
+        ];
+
+        const frame = document.getElementById('appFrame');
+        frame.addEventListener('load', () => {
+            // Give scripts a moment to finish executing after load
+            setTimeout(() => {
+                const resultsDiv = document.getElementById('testResults');
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+
+                let passed = 0;
+                let failed = 0;
+
+                assertions.forEach((assertion, i) => {
+                    const testDiv = document.createElement('div');
+                    testDiv.className = 'test-case';
+
+                    const title = document.createElement('h3');
+                    title.textContent = `Test ${i + 1}: ${assertion.name}`;
+                    testDiv.appendChild(title);
+
+                    const resultDiv = document.createElement('div');
+                    let ok = false;
+                    try {
+                        ok = assertion.fn(frameDoc);
+                    } catch (e) {
+                        ok = false;
+                    }
+
+                    if (ok) {
+                        resultDiv.className = 'result pass';
+                        resultDiv.textContent = '✔ PASS';
+                        passed++;
+                    } else {
+                        resultDiv.className = 'result fail';
+                        resultDiv.textContent = '✘ FAIL';
+                        failed++;
+                    }
+                    testDiv.appendChild(resultDiv);
+                    resultsDiv.appendChild(testDiv);
+                });
+
+                const summary = document.getElementById('summary');
+                if (failed === 0) {
+                    summary.className = 'all-pass';
+                    summary.textContent = `✔ All ${passed} smoke tests passed — the diner is OPEN! 🍳`;
+                } else {
+                    summary.className = 'has-fail';
+                    summary.textContent = `✘ ${failed} of ${passed + failed} tests failed — lights are not fully on yet.`;
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html>
