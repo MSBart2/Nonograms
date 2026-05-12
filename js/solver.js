@@ -180,6 +180,50 @@ class NonogramSolver {
         return grid;
     }
 
+    isLineConflicted(clues, userLine) {
+        if (clues.length === 1 && clues[0] === 0) {
+            return userLine.some(cell => cell === 1);
+        }
+        return !this._canPlace(clues, 0, userLine, 0);
+    }
+
+    _canPlace(clues, clueIndex, userLine, startPos) {
+        const length = userLine.length;
+
+        if (clueIndex === clues.length) {
+            for (let i = startPos; i < length; i++) {
+                if (userLine[i] === 1) return false;
+            }
+            return true;
+        }
+
+        const clue = clues[clueIndex];
+        const remainingClues = clues.slice(clueIndex + 1);
+        const minRemainingSpace = remainingClues.reduce((sum, c) => sum + c + 1, 0);
+        const maxPos = length - clue - minRemainingSpace;
+
+        for (let pos = startPos; pos <= maxPos; pos++) {
+            // A filled cell skipped before this block position means no valid placement here or later
+            if (pos > startPos && userLine[pos - 1] === 1) break;
+
+            // Block cells must not be crossed (empty)
+            let blockValid = true;
+            for (let i = pos; i < pos + clue; i++) {
+                if (userLine[i] === 0) { blockValid = false; break; }
+            }
+            if (!blockValid) continue;
+
+            // Separator cell immediately after the block must not be filled
+            if (pos + clue < length && userLine[pos + clue] === 1) continue;
+
+            if (this._canPlace(clues, clueIndex + 1, userLine, pos + clue + 1)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     solveLineWithKnown(clues, knownLine) {
         const length = knownLine.length;
         const possibilities = this.generateLinePossibilities(clues, length);

@@ -658,3 +658,34 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Conflict Highlights */
+.clue-number.conflict {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.game-cell.conflict-line {
+    background: #fef9c3;
+}
+
+.game-cell.marked.conflict-line {
+    background: #d97706;
+}
+
+/* Error State */
+.error-state {
+    border-left: 4px solid var(--danger-color);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    box-shadow: var(--shadow);
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.error-state.hidden {
+    display: none;
+}

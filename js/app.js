@@ -1,21 +1,33 @@
 // Main application logic
+const DEMO_PUZZLE = {
+    id: 'demo',
+    name: 'Demo Puzzle',
+    size: 5,
+    grid: [
+        [1,1,1,1,1],
+        [1,0,0,0,1],
+        [1,0,0,0,1],
+        [1,0,0,0,1],
+        [1,1,1,1,1]
+    ],
+    rowClues: [[5],[1,1],[1,1],[1,1],[5]],
+    colClues: [[5],[1,1],[1,1],[1,1],[5]],
+    createdBy: 'system',
+    createdAt: new Date(0).toISOString()
+};
+
 class NonogramApp {
     constructor() {
         this.currentView = 'browse';
         this.currentGame = null;
         this.currentSolution = null;
         this.cameraStream = null;
+        this.conflictHintsEnabled = true;
         this.init();
     }
 
     init() {
-        // Check if user is logged in
-        if (window.authManager.isLoggedIn()) {
-            this.showMainScreen();
-        } else {
-            this.showLoginScreen();
-        }
-
+        this._bootIntoPlay();
         this.setupEventListeners();
     }
 
@@ -42,6 +54,23 @@ class NonogramApp {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 this.handleLogout();
+            });
+        }
+
+        // Login nav button (guest → login screen)
+        const loginNavBtn = document.getElementById('loginNavBtn');
+        if (loginNavBtn) {
+            loginNavBtn.addEventListener('click', () => {
+                this.showLoginScreen();
+            });
+        }
+
+        // Continue as guest link (login screen → play)
+        const continueAsGuestLink = document.getElementById('continueAsGuestLink');
+        if (continueAsGuestLink) {
+            continueAsGuestLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this._bootIntoPlay();
             });
         }
 
@@ -155,6 +184,18 @@ class NonogramApp {
             });
         }
 
+        const toggleHintsBtn = document.getElementById('toggleConflictHints');
+        if (toggleHintsBtn) {
+            toggleHintsBtn.addEventListener('click', () => {
+                this.conflictHintsEnabled = !this.conflictHintsEnabled;
+                toggleHintsBtn.textContent = `💡 Hints: ${this.conflictHintsEnabled ? 'On' : 'Off'}`;
+                if (this.currentGame) {
+                    this.currentGame.conflictHintsEnabled = this.conflictHintsEnabled;
+                    this.currentGame.renderGame('gameCanvas');
+                }
+            });
+        }
+
         const backBtn = document.getElementById('backToBrowse');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -207,13 +248,54 @@ class NonogramApp {
         this.loadPuzzles();
     }
 
+    _bootIntoPlay() {
+        document.getElementById('loginScreen').classList.remove('active');
+        document.getElementById('mainScreen').classList.add('active');
+
+        const username = window.authManager.getCurrentUser();
+        if (username) {
+            document.getElementById('userDisplay').textContent = `👤 ${username}`;
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            const loginNavBtn = document.getElementById('loginNavBtn');
+            if (loginNavBtn) loginNavBtn.classList.add('hidden');
+        } else {
+            document.getElementById('userDisplay').textContent = '';
+            document.getElementById('logoutBtn').classList.add('hidden');
+            const loginNavBtn = document.getElementById('loginNavBtn');
+            if (loginNavBtn) loginNavBtn.classList.remove('hidden');
+        }
+
+        try {
+            const puzzles = window.storageManager.getAllPuzzles();
+            if (puzzles.length > 0) {
+                this.playPuzzle(puzzles[0]);
+            } else {
+                this.playPuzzle(DEMO_PUZZLE);
+            }
+        } catch (err) {
+            this._showBoardError();
+        }
+    }
+
+    _showBoardError() {
+        const errorState = document.getElementById('puzzleErrorState');
+        if (errorState) errorState.classList.remove('hidden');
+        const retryBtn = document.getElementById('retryLoadPuzzle');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                errorState.classList.add('hidden');
+                this._bootIntoPlay();
+            }, { once: true });
+        }
+    }
+
     handleLogin() {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
         try {
             window.authManager.login(username, password);
-            this.showMainScreen();
+            this._bootIntoPlay();
             this.showNotification('Welcome back!', 'success');
         } catch (error) {
             this.showNotification(error.message, 'error');
@@ -227,7 +309,7 @@ class NonogramApp {
         try {
             window.authManager.register(username, password);
             window.authManager.login(username, password);
-            this.showMainScreen();
+            this._bootIntoPlay();
             this.showNotification('Account created successfully!', 'success');
         } catch (error) {
             this.showNotification(error.message, 'error');
@@ -236,7 +318,7 @@ class NonogramApp {
 
     handleLogout() {
         window.authManager.logout();
-        this.showLoginScreen();
+        this._bootIntoPlay();
         this.showNotification('Logged out successfully', 'info');
     }
 
@@ -484,6 +566,7 @@ class NonogramApp {
 
     playPuzzle(puzzle) {
         this.currentGame = new NonogramGame(puzzle.size, puzzle.grid);
+        this.currentGame.conflictHintsEnabled = this.conflictHintsEnabled;
         
         document.getElementById('currentPuzzleName').textContent = puzzle.name;
         this.switchView('play');

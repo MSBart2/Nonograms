@@ -4,6 +4,7 @@ class NonogramGame {
         this.size = size;
         this.grid = grid || this.createEmptyGrid();
         this.userGrid = this.createEmptyGrid();
+        this.conflictHintsEnabled = false;
     }
 
     createEmptyGrid() {
@@ -49,6 +50,27 @@ class NonogramGame {
         return { rowClues, colClues };
     }
 
+    getConflictingLines(rowClues, colClues) {
+        const conflictedRows = new Set();
+        const conflictedCols = new Set();
+
+        for (let i = 0; i < this.size; i++) {
+            const solverLine = this.userGrid[i].map(cell => cell === 0 ? -1 : cell === 1 ? 1 : 0);
+            if (window.nonogramSolver.isLineConflicted(rowClues[i], solverLine)) {
+                conflictedRows.add(i);
+            }
+        }
+
+        for (let j = 0; j < this.size; j++) {
+            const solverLine = this.userGrid.map(row => row[j] === 0 ? -1 : row[j] === 1 ? 1 : 0);
+            if (window.nonogramSolver.isLineConflicted(colClues[j], solverLine)) {
+                conflictedCols.add(j);
+            }
+        }
+
+        return { conflictedRows, conflictedCols };
+    }
+
     renderEditor(containerId) {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
@@ -89,6 +111,12 @@ class NonogramGame {
 
         const { rowClues, colClues } = this.calculateClues();
 
+        let conflictedRows = new Set();
+        let conflictedCols = new Set();
+        if (this.conflictHintsEnabled && !showSolution) {
+            ({ conflictedRows, conflictedCols } = this.getConflictingLines(rowClues, colClues));
+        }
+
         // Calculate max clue lengths for layout
         const maxRowClueLength = Math.max(...rowClues.map(c => c.length));
         const maxColClueLength = Math.max(...colClues.map(c => c.length));
@@ -124,7 +152,11 @@ class NonogramGame {
                 clueCell.className = 'clue-number';
                 clueCell.style.width = `${cellSize}px`;
                 clueCell.style.height = `${cellSize}px`;
-                clueCell.style.background = '#f8fafc';
+                if (conflictedCols.has(j)) {
+                    clueCell.classList.add('conflict');
+                } else {
+                    clueCell.style.background = '#f8fafc';
+                }
                 clueCell.style.display = 'flex';
                 clueCell.style.alignItems = 'center';
                 clueCell.style.justifyContent = 'center';
@@ -147,7 +179,11 @@ class NonogramGame {
                 clueCell.className = 'clue-number';
                 clueCell.style.width = `${cellSize}px`;
                 clueCell.style.height = `${cellSize}px`;
-                clueCell.style.background = '#f8fafc';
+                if (conflictedRows.has(i)) {
+                    clueCell.classList.add('conflict');
+                } else {
+                    clueCell.style.background = '#f8fafc';
+                }
                 clueCell.style.display = 'flex';
                 clueCell.style.alignItems = 'center';
                 clueCell.style.justifyContent = 'center';
@@ -176,6 +212,10 @@ class NonogramGame {
                     cell.classList.add('marked');
                 } else if (this.userGrid[i][j] === -1) {
                     cell.classList.add('crossed');
+                }
+
+                if (this.conflictHintsEnabled && !showSolution && (conflictedRows.has(i) || conflictedCols.has(j))) {
+                    cell.classList.add('conflict-line');
                 }
 
                 if (!showSolution) {

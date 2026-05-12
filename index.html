@@ -9,7 +9,7 @@
 <body>
     <div id="app">
         <!-- Login Screen -->
-        <div id="loginScreen" class="screen active">
+        <div id="loginScreen" class="screen">
             <div class="container">
                 <div class="card login-card">
                     <h1>🎨 Nonograms</h1>
@@ -26,17 +26,21 @@
                         <button type="submit" class="btn btn-primary">Login</button>
                         <button type="button" id="registerBtn" class="btn btn-secondary">Register</button>
                     </form>
+                    <p class="help-text" style="margin-top:1rem;">
+                        <a href="#" id="continueAsGuestLink">← Continue as Guest</a>
+                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Main App Screen -->
-        <div id="mainScreen" class="screen">
+        <div id="mainScreen" class="screen active">
             <nav class="navbar">
                 <div class="nav-brand">🎨 Nonograms</div>
                 <div class="nav-menu">
                     <span id="userDisplay" class="nav-user"></span>
-                    <button id="logoutBtn" class="btn btn-text">Logout</button>
+                    <button id="loginNavBtn" class="btn btn-primary">Login / Register</button>
+                    <button id="logoutBtn" class="btn btn-text hidden">Logout</button>
                 </div>
             </nav>
 
@@ -250,6 +254,11 @@
                             <div class="game-controls">
                                 <button id="checkSolution" class="btn btn-primary">Check Solution</button>
                                 <button id="resetPuzzle" class="btn btn-secondary">Reset</button>
+                                <button id="toggleConflictHints" class="btn btn-secondary">💡 Hints: On</button>
+                            </div>
+                            <div id="puzzleErrorState" class="error-state hidden">
+                                <p>⚠️ Could not load a puzzle.</p>
+                                <button id="retryLoadPuzzle" class="btn btn-primary">Retry</button>
                             </div>
                         </div>
                     </main>
