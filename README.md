@@ -34,7 +34,7 @@ Then visit `http://localhost:8000`.
 
 ### First-Time Setup
 
-1. **Register** — enter a username (≥ 3 chars) and password (≥ 6 chars), then click "Register".
+1. **Open `index.html`** — a playable puzzle loads immediately, no account needed. To save puzzles or create your own, click **Login / Register** in the top-right corner.
 2. **Load sample puzzles** (optional) — open `load-sample-puzzles.html` in a browser and click "Generate 100 Sample Puzzles" to populate the app with a variety of puzzles across all grid sizes.
 3. **Create a puzzle** — go to *Create Puzzle*, pick a name and grid size (5×5 to 50×50), click cells to toggle them, and save.
 4. **Play** — go to *Browse Puzzles*, click a card, and solve it.
@@ -79,7 +79,14 @@ You can also clear all puzzles and regenerate them at any time.
 
 ## Testing
 
-There is currently no test suite or linter configured for this project. Contributions to add testing are welcome (see [Contributing](#contributing)).
+There is no build-time test runner or linter configured for this project, but two browser-based test harnesses are included:
+
+| File | What it tests |
+|---|---|
+| `test-solver.html` | 6 automated solver tests (5×5 to 10×10) — visual pass/fail indicators |
+| `smoke-test.html` | Boot-into-play flow smoke tests — verifies the app loads and core modules register correctly |
+
+Open either file directly in a browser to run the tests. Contributions to add a proper test runner are welcome (see [Contributing](#contributing)).
 
 ## Architecture
 
