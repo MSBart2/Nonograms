@@ -136,6 +136,34 @@ class NonogramSolver {
         return possibilities;
     }
 
+    // Conflict detection — returns true if no valid arrangement fits the player's marks
+    // userLine uses userGrid encoding: 0=untouched, 1=filled, -1=crossed
+    isLineConflicted(clues, userLine) {
+        // Early exit: if no marks have been made, nothing to conflict
+        if (userLine.every(cell => cell === 0)) return false;
+
+        // Translate userGrid values to solver knownLine format:
+        //   userGrid 0  → solver -1 (unknown)
+        //   userGrid 1  → solver  1 (filled)
+        //   userGrid -1 → solver  0 (empty/crossed)
+        const knownLine = userLine.map(cell => {
+            if (cell === 1) return 1;
+            if (cell === -1) return 0;
+            return -1;
+        });
+
+        const possibilities = this.generateLinePossibilities(clues, userLine.length);
+
+        // Filter to arrangements that are compatible with what the player has marked
+        const validPossibilities = possibilities.filter(possibility => {
+            return knownLine.every((cell, i) => {
+                return cell === -1 || cell === possibility[i];
+            });
+        });
+
+        return validPossibilities.length === 0;
+    }
+
     // Solve a complete puzzle using constraint propagation
     solveComplete(rowClues, colClues) {
         const rows = rowClues.length;

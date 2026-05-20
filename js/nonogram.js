@@ -83,11 +83,44 @@ class NonogramGame {
         container.appendChild(gridElement);
     }
 
-    renderGame(containerId, showSolution = false) {
+    detectConflicts() {
+        const { rowClues, colClues } = this.calculateClues();
+        const conflictRows = new Set();
+        const conflictCols = new Set();
+
+        // Check each row
+        for (let i = 0; i < this.size; i++) {
+            const userLine = this.userGrid[i];
+            if (userLine.every(cell => cell === 0)) continue; // Skip untouched rows
+            if (window.nonogramSolver.isLineConflicted(rowClues[i], userLine)) {
+                conflictRows.add(i);
+            }
+        }
+
+        // Check each column
+        for (let j = 0; j < this.size; j++) {
+            const userLine = this.userGrid.map(row => row[j]);
+            if (userLine.every(cell => cell === 0)) continue; // Skip untouched cols
+            if (window.nonogramSolver.isLineConflicted(colClues[j], userLine)) {
+                conflictCols.add(j);
+            }
+        }
+
+        return { conflictRows, conflictCols };
+    }
+
+    renderGame(containerId, showSolution = false, conflictHints = false) {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
 
         const { rowClues, colClues } = this.calculateClues();
+
+        // Run conflict detection when hints are enabled and not showing solution
+        let conflictRows = new Set();
+        let conflictCols = new Set();
+        if (conflictHints && !showSolution) {
+            ({ conflictRows, conflictCols } = this.detectConflicts());
+        }
 
         // Calculate max clue lengths for layout
         const maxRowClueLength = Math.max(...rowClues.map(c => c.length));
@@ -122,6 +155,9 @@ class NonogramGame {
             for (let j = 0; j < this.size; j++) {
                 const clueCell = document.createElement('div');
                 clueCell.className = 'clue-number';
+                if (conflictCols.has(j)) {
+                    clueCell.classList.add('conflict');
+                }
                 clueCell.style.width = `${cellSize}px`;
                 clueCell.style.height = `${cellSize}px`;
                 clueCell.style.background = '#f8fafc';
@@ -145,6 +181,9 @@ class NonogramGame {
             for (let k = 0; k < maxRowClueLength; k++) {
                 const clueCell = document.createElement('div');
                 clueCell.className = 'clue-number';
+                if (conflictRows.has(i)) {
+                    clueCell.classList.add('conflict');
+                }
                 clueCell.style.width = `${cellSize}px`;
                 clueCell.style.height = `${cellSize}px`;
                 clueCell.style.background = '#f8fafc';
@@ -178,6 +217,11 @@ class NonogramGame {
                     cell.classList.add('crossed');
                 }
 
+                // Apply conflict highlight if this cell's row or column is conflicted
+                if (conflictRows.has(i) || conflictCols.has(j)) {
+                    cell.classList.add('conflict');
+                }
+
                 if (!showSolution) {
                     cell.addEventListener('click', (e) => {
                         if (e.shiftKey) {
@@ -187,13 +231,13 @@ class NonogramGame {
                             // Left click for mark
                             this.userGrid[i][j] = this.userGrid[i][j] === 1 ? 0 : 1;
                         }
-                        this.renderGame(containerId, showSolution);
+                        this.renderGame(containerId, showSolution, conflictHints);
                     });
 
                     cell.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         this.userGrid[i][j] = this.userGrid[i][j] === -1 ? 0 : -1;
-                        this.renderGame(containerId, showSolution);
+                        this.renderGame(containerId, showSolution, conflictHints);
                     });
                 }
 
