@@ -486,6 +486,21 @@ body {
     background: #f0f0f0;
 }
 
+.game-cell:focus,
+.game-cell:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: -3px;
+    position: relative;
+    z-index: 1;
+}
+
+.editor-cell:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: -3px;
+    position: relative;
+    z-index: 1;
+}
+
 .game-cell.marked {
     background: var(--primary-color);
 }

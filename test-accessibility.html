@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Test — Nonogram Keyboard &amp; ARIA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #6366f1;
+        }
+        .summary {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1rem 0 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .summary .pass { color: #155724; }
+        .summary .fail { color: #721c24; }
+        .test-case {
+            margin: 16px 0;
+            padding: 16px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #6366f1;
+            font-size: 1rem;
+        }
+        .result {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        /* Hidden game canvas needed for DOM-based tests */
+        #gameCanvas { display: none; }
+    </style>
+</head>
+<body>
+    <h1>♿ Nonogram Accessibility Tests</h1>
+    <p>12 automated checks for keyboard navigation and ARIA semantics. Open in a browser — no build step required.</p>
+    <div class="summary" id="summary"></div>
+    <div id="testResults"></div>
+
+    <!-- Hidden container for renderGame() DOM output -->
+    <div id="gameCanvas"></div>
+
+    <script src="js/nonogram.js"></script>
+    <script>
+        // ─── Test harness ─────────────────────────────────────────────────────────
+        let passCount = 0;
+        let failCount = 0;
+
+        function assert(condition, label, detail) {
+            const div = document.createElement('div');
+            div.className = 'test-case';
+
+            const title = document.createElement('h3');
+            title.textContent = label;
+            div.appendChild(title);
+
+            const result = document.createElement('div');
+            if (condition) {
+                passCount++;
+                result.className = 'result success';
+                result.textContent = '✓ PASS' + (detail ? ' — ' + detail : '');
+            } else {
+                failCount++;
+                result.className = 'result error';
+                result.textContent = '✗ FAIL' + (detail ? ' — ' + detail : '');
+            }
+            div.appendChild(result);
+            document.getElementById('testResults').appendChild(div);
+            return condition;
+        }
+
+        // ─── Test setup ───────────────────────────────────────────────────────────
+        // 3×3 puzzle with a simple cross pattern
+        const SOLUTION = [
+            [0, 1, 0],
+            [1, 1, 1],
+            [0, 1, 0]
+        ];
+
+        let game;
+
+        function freshGame() {
+            game = new NonogramGame(3, SOLUTION.map(r => [...r]));
+            game.focusedRow = 0;
+            game.focusedCol = 0;
+            document.getElementById('gameCanvas').innerHTML = '';
+            game.renderGame('gameCanvas', false);
+            return document.getElementById('gameCanvas').querySelector('.game-grid');
+        }
+
+        // ─── Tests ────────────────────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+
+            // Test 1 — renderGame() populates DOM without errors
+            let grid;
+            try {
+                grid = freshGame();
+                assert(!!grid, 'Test 1: renderGame() populates DOM without errors', 'grid element found');
+            } catch (err) {
+                assert(false, 'Test 1: renderGame() populates DOM without errors', err.message);
+            }
+
+            // Test 2 — grid wrapper has role="grid"
+            grid = freshGame();
+            assert(
+                grid && grid.getAttribute('role') === 'grid',
+                'Test 2: Grid wrapper has role="grid"',
+                grid ? `role="${grid.getAttribute('role')}"` : 'no grid element'
+            );
+
+            // Test 3 — all puzzle cells have role="gridcell"
+            grid = freshGame();
+            const cells = grid ? Array.from(grid.querySelectorAll('[data-row]')) : [];
+            const allGridcell = cells.length > 0 && cells.every(c => c.getAttribute('role') === 'gridcell');
+            assert(
+                allGridcell,
+                'Test 3: All puzzle cells have role="gridcell"',
+                `${cells.length} cells found, all have role="gridcell": ${allGridcell}`
+            );
+
+            // Test 4 — exactly one cell has tabindex="0"
+            grid = freshGame();
+            const tabZeroCells = grid ? grid.querySelectorAll('[data-row][tabindex="0"]') : [];
+            assert(
+                tabZeroCells.length === 1,
+                'Test 4: Exactly one cell has tabindex="0" (roving tabindex anchor)',
+                `found ${tabZeroCells.length} cell(s) with tabindex="0"`
+            );
+
+            // Test 5 — all other puzzle cells have tabindex="-1"
+            grid = freshGame();
+            const allCellsForTabindex = grid ? Array.from(grid.querySelectorAll('[data-row]')) : [];
+            const tabMinusOneCells = allCellsForTabindex.filter(c => c.getAttribute('tabindex') === '-1');
+            assert(
+                allCellsForTabindex.length > 1 && tabMinusOneCells.length === allCellsForTabindex.length - 1,
+                'Test 5: All non-focused cells have tabindex="-1"',
+                `${tabMinusOneCells.length} of ${allCellsForTabindex.length} cells have tabindex="-1"`
+            );
+
+            // Test 6 — each cell aria-label contains "Row", "Column", and a state word
+            grid = freshGame();
+            const allCellsForAria = grid ? Array.from(grid.querySelectorAll('[data-row]')) : [];
+            const stateWords = ['filled', 'crossed', 'empty'];
+            const ariaValid = allCellsForAria.length > 0 && allCellsForAria.every(c => {
+                const label = c.getAttribute('aria-label') || '';
+                return label.includes('Row') && label.includes('Column') && stateWords.some(s => label.includes(s));
+            });
+            assert(
+                ariaValid,
+                'Test 6: Each cell aria-label contains "Row", "Column", and a state word',
+                `${allCellsForAria.length} cells checked, all valid: ${ariaValid}`
+            );
+
+            // Test 7 — Space keydown toggles fill (userGrid 0→1, cell gains .marked)
+            grid = freshGame();
+            const targetCell7 = grid ? grid.querySelector('[data-row="0"][data-col="0"]') : null;
+            if (targetCell7) {
+                const spaceEvent = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+                targetCell7.dispatchEvent(spaceEvent);
+            }
+            assert(
+                game.userGrid[0][0] === 1 && targetCell7 && targetCell7.classList.contains('marked'),
+                'Test 7: Space keydown toggles cell to filled (userGrid[0][0]===1, .marked present)',
+                targetCell7 ? `userGrid[0][0]=${game.userGrid[0][0]}, has .marked: ${targetCell7.classList.contains('marked')}` : 'no cell found'
+            );
+
+            // Test 8 — X keydown toggles cross (userGrid 0→-1, cell gains .crossed)
+            grid = freshGame();
+            const targetCell8 = grid ? grid.querySelector('[data-row="1"][data-col="0"]') : null;
+            if (targetCell8) {
+                const xEvent = new KeyboardEvent('keydown', { key: 'x', bubbles: true, cancelable: true });
+                targetCell8.dispatchEvent(xEvent);
+            }
+            assert(
+                game.userGrid[1][0] === -1 && targetCell8 && targetCell8.classList.contains('crossed'),
+                'Test 8: X keydown toggles cell to crossed (userGrid[1][0]===-1, .crossed present)',
+                targetCell8 ? `userGrid[1][0]=${game.userGrid[1][0]}, has .crossed: ${targetCell8.classList.contains('crossed')}` : 'no cell found'
+            );
+
+            // Test 9 — ArrowRight moves focusedCol +1
+            grid = freshGame();
+            const startCol = game.focusedCol; // 0
+            const cell9 = grid ? grid.querySelector('[data-row="0"][data-col="0"]') : null;
+            if (cell9) {
+                const rightEvent = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+                cell9.dispatchEvent(rightEvent);
+            }
+            assert(
+                game.focusedCol === startCol + 1,
+                'Test 9: ArrowRight moves focusedCol +1',
+                `focusedCol: ${startCol} → ${game.focusedCol} (expected ${startCol + 1})`
+            );
+
+            // Test 10 — ArrowDown moves focusedRow +1
+            grid = freshGame();
+            const startRow = game.focusedRow; // 0
+            const cell10 = grid ? grid.querySelector('[data-row="0"][data-col="0"]') : null;
+            if (cell10) {
+                const downEvent = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
+                cell10.dispatchEvent(downEvent);
+            }
+            assert(
+                game.focusedRow === startRow + 1,
+                'Test 10: ArrowDown moves focusedRow +1',
+                `focusedRow: ${startRow} → ${game.focusedRow} (expected ${startRow + 1})`
+            );
+
+            // Test 11 — ArrowLeft at col 0 does NOT change focusedCol (boundary clamp)
+            grid = freshGame();
+            game.focusedRow = 0;
+            game.focusedCol = 0;
+            const cell11 = grid ? grid.querySelector('[data-row="0"][data-col="0"]') : null;
+            if (cell11) {
+                const leftEvent = new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true });
+                cell11.dispatchEvent(leftEvent);
+            }
+            assert(
+                game.focusedCol === 0,
+                'Test 11: ArrowLeft at col 0 does NOT change focusedCol (boundary clamped)',
+                `focusedCol stayed at: ${game.focusedCol}`
+            );
+
+            // Test 12 — ArrowUp at row 0 does NOT change focusedRow (boundary clamp)
+            grid = freshGame();
+            game.focusedRow = 0;
+            game.focusedCol = 0;
+            const cell12 = grid ? grid.querySelector('[data-row="0"][data-col="0"]') : null;
+            if (cell12) {
+                const upEvent = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true });
+                cell12.dispatchEvent(upEvent);
+            }
+            assert(
+                game.focusedRow === 0,
+                'Test 12: ArrowUp at row 0 does NOT change focusedRow (boundary clamped)',
+                `focusedRow stayed at: ${game.focusedRow}`
+            );
+
+            // ─── Summary ──────────────────────────────────────────────────────────
+            const summaryEl = document.getElementById('summary');
+            summaryEl.innerHTML = `
+                <span class="pass">✓ ${passCount} passed</span>
+                <span class="fail">${failCount > 0 ? '✗ ' + failCount + ' failed' : '0 failed'}</span>
+                <span>of 12 checks</span>
+            `;
+            document.title = `[${passCount}/12] Accessibility Tests`;
+        });
+    </script>
+</body>
+</html>

@@ -44,10 +44,22 @@ Then visit `http://localhost:8000`.
 
 | Action | Input |
 |---|---|
-| Fill a cell | Left-click |
-| Mark a cell empty | Right-click **or** Shift+click |
+| Fill a cell | Left-click **or** Space |
+| Mark a cell empty (cross) | Right-click **or** Shift+click **or** X |
+| Clear a cell | Delete **or** Backspace |
+| Move focus | Arrow keys (↑ ↓ ← →) |
 | Check solution | "Check Solution" button |
 | Reset progress | "Reset" button |
+
+### Accessibility
+
+The game board is fully keyboard-operable and exposes ARIA semantics for screen readers:
+
+- **Keyboard navigation** — Arrow keys move focus through cells without leaving the board. Focus is never lost on cell interaction because the grid updates in-place (no full re-render).
+- **ARIA grid semantics** — The board is marked up as `role="grid"` with `role="gridcell"`, `role="rowheader"`, and `role="columnheader"` on each region.
+- **Accessible labels** — Each cell's `aria-label` announces its row, column, current state (filled / crossed / empty), row clues, and column clues so screen reader users have full puzzle context.
+- **Roving tabindex** — Only the focused cell has `tabindex="0"`; all others have `tabindex="-1"`. This keeps Tab navigation clean — one Tab press enters the board, arrow keys do the rest.
+- **Focus indicator** — A visible `3px` outline appears on the focused cell using an inset `outline-offset` so the board layout does not shift.
 
 ### Solver Usage
 
@@ -85,6 +97,7 @@ There is no build-time test runner or linter configured for this project, but tw
 |---|---|
 | `test-solver.html` | 6 automated solver tests (5×5 to 10×10) — visual pass/fail indicators |
 | `smoke-test.html` | Boot-into-play flow smoke tests — verifies the app loads and core modules register correctly |
+| `test-accessibility.html` | 12 automated keyboard navigation and ARIA checks — verifies focus management, roving tabindex, cell state toggles, and arrow-key boundary clamping |
 
 Open either file directly in a browser to run the tests. Contributions to add a proper test runner are welcome (see [Contributing](#contributing)).
 
@@ -97,13 +110,14 @@ Nonograms/
 ├── index.html                   # Single-page application shell
 ├── load-sample-puzzles.html     # Utility to generate 100 sample puzzles
 ├── test-solver.html             # Automated test suite for the solver
+├── test-accessibility.html      # Automated keyboard navigation and ARIA test suite
 ├── css/
 │   └── styles.css               # All styling and responsive layout
 ├── js/
 │   ├── app.js                   # Top-level UI logic and event wiring
 │   ├── auth.js                  # Registration, login, logout (localStorage)
 │   ├── storage.js               # CRUD operations for puzzle data (localStorage)
-│   ├── nonogram.js              # Puzzle model, clue calculation, grid rendering
+│   ├── nonogram.js              # Puzzle model, clue calculation, grid rendering, keyboard + ARIA
 │   ├── photoProcessor.js        # Image-to-grid conversion (grayscale threshold)
 │   └── solver.js                # Constraint-propagation solver (fully integrated)
 ├── .github/
