@@ -11,6 +11,8 @@
     --border-color: #e2e8f0;
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --warning-color: #f59e0b;
+    --conflict-bg: #fef3c7;
 }
 
 * {
@@ -657,4 +659,28 @@ body {
     .clue-inputs-container {
         grid-template-columns: 1fr;
     }
+}
+
+/* ── Conflict detection styles ────────────────────────────────────── */
+
+/* Amber highlight on row/col clue headers when line is conflicted */
+.clue-number.conflict {
+    background: var(--conflict-bg) !important;
+    color: #92400e;
+    font-weight: 700;
+}
+
+/* Subtle amber outline on cells in conflicted lines */
+.game-cell.conflict {
+    outline: 1px solid var(--warning-color);
+    outline-offset: -1px;
+}
+
+/* Conflict hints toggle in game controls */
+.conflict-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
 }

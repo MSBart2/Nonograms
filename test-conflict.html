@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflict Detection Tests</title>
+    <style>
+        body { font-family: monospace; padding: 2rem; background: #f8fafc; color: #1e293b; }
+        h1 { margin-bottom: 1.5rem; }
+        .test { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; }
+        .pass { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .fail { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .summary { margin-top: 2rem; font-size: 1.2rem; font-weight: bold; }
+        .summary.all-pass { color: #065f46; }
+        .summary.some-fail { color: #991b1b; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Conflict Detection Tests</h1>
+    <div id="results"></div>
+    <div id="summary" class="summary"></div>
+
+    <!-- Load dependencies (solver first, then nonogram) -->
+    <script src="js/solver.js"></script>
+    <script src="js/nonogram.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        const summaryEl = document.getElementById('summary');
+        let passed = 0;
+        let failed = 0;
+
+        function assert(description, clues, userLine, expected) {
+            const actual = window.nonogramSolver.isLineConflicted(clues, userLine);
+            const ok = actual === expected;
+            ok ? passed++ : failed++;
+
+            const div = document.createElement('div');
+            div.className = `test ${ok ? 'pass' : 'fail'}`;
+            const icon = ok ? '✅' : '❌';
+            div.textContent = `${icon} ${description} — clues=[${clues}] userLine=[${userLine}] → expected ${expected}, got ${actual}`;
+            results.appendChild(div);
+        }
+
+        // ── Test Cases ─────────────────────────────────────────────────
+        // 1. No conflict — empty line (all zeros → skip, return false)
+        assert(
+            'No conflict — empty line (all untouched)',
+            [3],
+            [0, 0, 0, 0, 0],
+            false
+        );
+
+        // 2. No conflict — valid partial fill
+        assert(
+            'No conflict — valid partial fill',
+            [3],
+            [1, 1, 0, 0, 0],
+            false
+        );
+
+        // 3. Conflict — too many filled consecutively vs clue
+        assert(
+            'Conflict — 3 consecutive filled but clue is [2]',
+            [2],
+            [1, 1, 1, 0, 0],
+            true
+        );
+
+        // 4. Conflict — cross blocks only valid position (clue=[5], length=5, cross in middle)
+        assert(
+            'Conflict — clue [5] length=5 with a cross in middle forces conflict',
+            [5],
+            [0, -1, 0, 0, 0],
+            true
+        );
+
+        // 5. No conflict — crossed-out cells match empty, valid arrangement exists
+        assert(
+            'No conflict — [-1,1,1,-1,1] with clues [2,1]',
+            [2, 1],
+            [-1, 1, 1, -1, 1],
+            false
+        );
+
+        // 6. Conflict — crosses block all arrangements for [1,1]
+        assert(
+            'Conflict — clues [1,1] with first 3 cells crossed, only 2 remain (need min 3)',
+            [1, 1],
+            [-1, -1, -1, 0, 0],
+            true
+        );
+
+        // ── Summary ───────────────────────────────────────────────────
+        const total = passed + failed;
+        summaryEl.textContent = `${passed}/${total} tests passed`;
+        summaryEl.className = `summary ${failed === 0 ? 'all-pass' : 'some-fail'}`;
+    </script>
+</body>
+</html>

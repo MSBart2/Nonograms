@@ -5,6 +5,7 @@ class NonogramApp {
         this.currentGame = null;
         this.currentSolution = null;
         this.cameraStream = null;
+        this.conflictHintsEnabled = this.loadConflictSetting();
         this.init();
     }
 
@@ -162,6 +163,18 @@ class NonogramApp {
             });
         }
 
+        // Conflict hints toggle
+        const conflictToggle = document.getElementById('conflictHintsToggle');
+        if (conflictToggle) {
+            conflictToggle.addEventListener('change', (e) => {
+                this.conflictHintsEnabled = e.target.checked;
+                this.saveConflictSetting(this.conflictHintsEnabled);
+                if (this.currentGame) {
+                    this.currentGame.renderGame('gameCanvas', false, this.conflictHintsEnabled);
+                }
+            });
+        }
+
         // Solver clue input buttons
         const generateClueBtn = document.getElementById('generateClueInputs');
         if (generateClueBtn) {
@@ -190,6 +203,16 @@ class NonogramApp {
                 this.saveSolvedPuzzle();
             });
         }
+    }
+
+    loadConflictSetting() {
+        const stored = localStorage.getItem('nonogram_conflict_hints');
+        // Default to true when no stored value exists
+        return stored === null ? true : stored === 'true';
+    }
+
+    saveConflictSetting(value) {
+        localStorage.setItem('nonogram_conflict_hints', value);
     }
 
     showLoginScreen() {
@@ -488,7 +511,11 @@ class NonogramApp {
         document.getElementById('currentPuzzleName').textContent = puzzle.name;
         this.switchView('play');
         
-        this.currentGame.renderGame('gameCanvas');
+        // Sync the toggle checkbox with the current setting
+        const toggle = document.getElementById('conflictHintsToggle');
+        if (toggle) toggle.checked = this.conflictHintsEnabled;
+
+        this.currentGame.renderGame('gameCanvas', false, this.conflictHintsEnabled);
     }
 
     checkSolution() {
@@ -505,7 +532,7 @@ class NonogramApp {
     resetPuzzle() {
         if (this.currentGame) {
             this.currentGame.reset();
-            this.currentGame.renderGame('gameCanvas');
+            this.currentGame.renderGame('gameCanvas', false, this.conflictHintsEnabled);
             this.showNotification('Puzzle reset', 'info');
         }
     }
